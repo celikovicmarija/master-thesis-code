@@ -1,9 +1,10 @@
 import itertools
 import logging
+import re as regex
 from datetime import datetime
 
 import scrapy
-from inline_requests import inline_requests
+from scrapy import Request
 from scrapy.loader import ItemLoader
 from scrapy.utils.log import configure_logging
 from scrapy_splash import SplashRequest
@@ -23,16 +24,14 @@ def find_list_to_scrape(urls_test):
     sublist_rent_land = [urls_test[-2] + '?page=' + str(i) for i in range(1, 10)]
     sublist_rent_other = [urls_test[-1] + '?page=' + str(i) for i in range(1, 10)]
     sublist_sell_other = [urls_test[4] + '?page=' + str(i) for i in range(1, 10)]
-    return list(itertools.chain(sublist_rent_apt, sublist_rent_house, sublist_rent_garage, sublist_sell_land,
+    return list(itertools.chain( sublist_sell_land,
                                 sublist_sell_house, sublist_sell_garage,
-                                sublist_sell_other, sublist_sell_apt,
-                                sublist_rent_land,
-                                sublist_rent_other, sublist_rent_room))
+                                sublist_sell_other,sublist_rent_garage, sublist_rent_land,
+                                sublist_rent_other, sublist_rent_room,  sublist_sell_apt,sublist_rent_house,sublist_rent_apt,))
 
 
 class HalooglasiSpider(scrapy.Spider):
     name = 'halooglasi'
-    # allowed_domains = ['halooglasi.com']
 
     configure_logging(install_root_handler=False)
     logging.basicConfig(
@@ -51,10 +50,8 @@ class HalooglasiSpider(scrapy.Spider):
 
     def start_requests(self):
         for url in self.urls:
-            logging.log(logging.INFO, f'I CAME TO THE URL {url}')
-            yield SplashRequest(url=url, callback=self.parse, args={"timeout": 3600})
+            yield Request(url=url, callback=self.parse)
 
-    @inline_requests
     def parse(self, response):
         # next_page = response.css('a.page-link.next::attr(href)').get()
         # # response.css('a.page-link.next::attr(href)').get()
@@ -63,35 +60,31 @@ class HalooglasiSpider(scrapy.Spider):
         #     next_url = 'https://www.halooglasi.com' + next_page
         #     self.urls.append(next_url)
         for re in response.css('div.product-item.product-list-item.Top.real-estates.my-product-placeholder'):
-            l = ItemLoader(item=RealEstateScraperItem(), selector=re)
-            l.add_css('link', 'h3.product-title a::attr(href)')
-            logging.info(f'I found this page: {l.get_output_value("link")}')
-            res = yield SplashRequest(l.get_output_value('link'), endpoint='render.html',
-                                      args={'wait': 0.5, 'timeout': 3000})
-
-            yield self.parse_individual_real_estate(res, l, l.get_output_value('link'))
+            link = 'https://www.halooglasi.com' + re.css('h3.product-title a::attr(href)').get()
+            yield SplashRequest(link, endpoint='render.html', callback=self.parse_individual_real_estate,
+                                args={'wait': 0.5, 'timeout': 3000}, meta={'original_url': link})
 
         for re in response.css(
                 'div.product-item.product-list-item.Premium.real-estates.my-product-placeholder'):
-            l = ItemLoader(item=RealEstateScraperItem(), selector=re)
-            l.add_css('link', 'h3.product-title a::attr(href)')
-            logging.info(f'I found this page: {l.get_output_value("link")}')
-            res = yield SplashRequest(l.get_output_value('link'), endpoint='render.html',
-                                      args={'wait': 0.5, 'timeout': 3000})
-
-            yield self.parse_individual_real_estate(res, l, l.get_output_value('link'))
+            link = 'https://www.halooglasi.com' + re.css('h3.product-title a::attr(href)').get()
+            yield SplashRequest(link, endpoint='render.html', callback=self.parse_individual_real_estate,
+                                args={'wait': 0.5, 'timeout': 3000}, meta={'original_url': link})
 
         for st_re in response.css(
                 'div.product-item.product-list-item.Standard.real-estates.my-product-placeholder'):
-            l = ItemLoader(item=RealEstateScraperItem(), selector=st_re)
-            l.add_css('link', 'h3.product-title a::attr(href)')
-            logging.info(f'I found this page: {l.get_output_value("link")}')
-            res = yield SplashRequest(l.get_output_value('link'), endpoint='render.html',
-                                      args={'wait': 0.5, 'timeout': 3000})
+            link = 'https://www.halooglasi.com' + st_re.css('h3.product-title a::attr(href)').get()
+            yield SplashRequest(link, callback=self.parse_individual_real_estate, endpoint='render.html',
+                                args={'wait': 0.5, 'timeout': 3000}, meta={'original_url': link})
 
-            yield self.parse_individual_real_estate(res, l, l.get_output_value('link'))
+    def parse_individual_real_estate(self, response):
+        url = response.meta['original_url']
+        loader = ItemLoader(item=RealEstateScraperItem(), selector=response.css('div#wrapper'))
+        price = response.css('span.offer-price-value::text').get()
+        loader.add_value('price', price)
+        price_per_unit = response.css('div.price-by-surface span::text').get()
+        loader.add_value('price_per_unit', price_per_unit)
+        loader.add_value('link', url)
 
-    def parse_individual_real_estate(self, response, loader, link):
         title = response.css('span#plh1::text').get()
         loader.add_value('title', title)
         city = response.css('span#plh2::text').get()
@@ -102,44 +95,78 @@ class HalooglasiSpider(scrapy.Spider):
         loader.add_value('micro_location', micro_location)
         street = response.css('span#plh5::text').get()
         loader.add_value('street', street)
-        real_estate_type = response.css('span#plh11::text').get()
+
+        info = {}
+
+        for re in response.css('div.prominent ul'):
+            list_to_compare = [el for el in re.css('span.field-value ::text').getall() if
+                               regex.sub("(\s) | (,)", "", el).strip() != '']
+            for k, v in zip(re.css('span.field-name ::text').getall(), list_to_compare):
+                info[k.replace('\\n', '').strip()] = v.replace('\\n', '').strip()
+
+        real_estate_type = info['Tip nekretnine'] if 'Tip nekretnine' in info else ''
         loader.add_value('real_estate_type', real_estate_type)
-        size_in_squared_meters = response.css('span#plh12::text').get()
+
+        size_in_squared_meters = info['Kvadratura'] if 'Kvadratura' in info else ''
         loader.add_value('size_in_squared_meters', size_in_squared_meters)
-        number_of_rooms = response.css('span#plh13::text').get()
+
+        number_of_rooms = info['Broj soba'] if 'Broj soba' in info else ''
         loader.add_value('number_of_rooms', number_of_rooms)
 
-        response.css('div.datasheet.product-basic-details div.basic-view').getall()
+        for re in response.css('div.product-basic-details'):
+            list_to_compare = [el for el in re.css('div.col-lg-7.col-md-7.datasheet-features-type span::text').getall()
+                               if
+                               regex.sub("(\s) | (,)", "", el).strip() != '']
+            for k, v in zip(re.css('div.col-lg-5.col-md-5::text').getall(), list_to_compare):
+                info[k.strip().replace('\\n', '').strip()] = v.strip().replace('\\n', '').strip()
 
-        advertiser = response.css('span#plh14::text').get()
-        loader.add_value('advertiser', advertiser)
-        object_type = response.css('span#plh15::text').get()
-        loader.add_value('object_type', object_type)
-        object_state = response.css('span#plh16::text').get()
-        loader.add_value('object_state', object_state)
-        heating_type = response.css('span#plh17::text').get()
-        loader.add_value('heating_type', heating_type)
-        floor_number = response.css('span#plh18::text').get()
+        floor_number = info['Sprat'] if 'Sprat' in info else ''
         loader.add_value('floor_number', floor_number)
-        total_number_of_floors = response.css('span#plh19::text').get()
-        loader.add_value('total_number_of_floors', total_number_of_floors)
-        monthly_bills = response.css('span#plh20::text').get()
-        loader.add_value('monthly_bills', monthly_bills)
-        price = response.css('span#plh6 span.offer-price-value::text').get()
-        loader.add_value('price', price)
-        price_per_unit = response.css('span#plh7inner::text').get()
-        loader.add_value('price_per_unit', price_per_unit)
-        loader.add_value('link', link)
-        additional = []
-        for item in response.css('div.flags-container span label::text').getall():  # or span#plh21
-            additional.append(item)
 
-        for item in response.css('div.flags-container span#plh22 label::text').getall():
-            additional.append(item)
-        description = ''
+        total_number_of_floors = info['Ukupna Spratnost'] if 'Ukupna Spratnost' in info else ''
+        loader.add_value('total_number_of_floors', total_number_of_floors)
+
+        heating_type = info['Grejanje'] if 'Grejanje' in info else ''
+        loader.add_value('heating_type', heating_type)
+
+        object_state = info['Stanje objekta'] if 'Stanje objekta' in info else ''
+        loader.add_value('object_state', object_state)
+
+        object_type = info['Tip objekta'] if 'Tip objekta' in info else ''
+        loader.add_value('object_type', object_type)
+
+        monthly_bills = info['Mesečne režije'] if 'Mesečne režije' in info else ''
+        loader.add_value('monthly_bills', monthly_bills)
+
+        additional = []
+        spratnost = info['Spratnost'] if 'Spratnost' in info else ''
+        vrsta_zemljista = info['Vrsta zemljišta'] if 'Vrsta zemljišta' in info else ''
+        povrsina_placa = info['Površina placa'] if 'Površina placa' in info else ''
+
+        a = 'Spratnost:' + spratnost if spratnost else ''
+        if additional != '':
+            additional.append(a)
+
+        a = 'Vrsta zemljišta:' + vrsta_zemljista if vrsta_zemljista else ''
+        if additional != '':
+            additional.append(a)
+
+        a = 'Površina placa:' + povrsina_placa if povrsina_placa else ''
+        if additional != '':
+            additional.append(a)
+
+        for el in response.css('div.flags-container span label::text').getall():  # or span#plh21
+            additional.append(el)
+
+        additional = ' '.join([e for e in additional]).strip()
+
         loader.add_value('additional', additional)
-        for item in response.xpath("descendant-or-self::span[@id = 'plh50']/descendant-or-self::*/p/text()").extract():
-            description += str(item)
+
+        description = ''
+
+        for el in response.css('div#tabTopHeader3 span ::text').getall():
+            el = regex.sub("(\s) | (,)", " ", el).strip()
+            description += el
         loader.add_value('description', description)
 
         city_buses = []
@@ -147,18 +174,6 @@ class HalooglasiSpider(scrapy.Spider):
             city_buses.append(item)
         loader.add_value('city_lines', city_buses)
 
-        # image_urls = []
-        # for url in response.css('div.fotorama__nav__shaft img::attr(src)').getall():
-        #     if '/Content/Quiddita/Widgets/Product/Stylesheets/img/' in url:
-        #         continue
-        #     image_urls.append(url)
-        #
-        # image_names = []
-        # for image_url in image_urls:
-        #     image_names.append('halooglasi' + '_'.join(image_url.split('/')[-2:]))
-        # loader.add_value('image_urls', image_urls)
-        # loader.add_value('image_name', image_names)
+        loader.add_value('date', datetime.today().strftime('%d/%m/%Y'))
 
-        loader.add_value('date', datetime.today().strftime('%d-%m-%Y'))
-
-        return loader.load_item()
+        yield loader.load_item()

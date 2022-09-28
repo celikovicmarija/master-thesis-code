@@ -52,7 +52,7 @@ COOKIES_ENABLED = False
 #SPIDER_MIDDLEWARES = {
 #    'real_estate_scraper.middlewares.RealEstateScraperSpiderMiddleware': 543,
 #}
-# DELTAFETCH_ENABLED = True #################################### ENABLE THIS A BIT LATER
+DELTAFETCH_ENABLED = True #################################### ENABLE THIS A BIT LATER
 SPIDER_MIDDLEWARES = {
     # 'real_estate_scraper.middlewares.RealEstateScraperSpiderMiddleware': 543,
     'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
@@ -66,12 +66,12 @@ SPIDER_MIDDLEWARES = {
 #}
 DOWNLOADER_MIDDLEWARES = {
     'real_estate_scraper.middlewares.RotateUserAgentMiddleware': 541,
-    'real_estate_scraper.middlewares.ShowHeadersMiddleware': 542,
-    'real_estate_scraper.middlewares.RealEstateScraperDownloaderMiddleware': 543,
+    # 'real_estate_scraper.middlewares.ShowHeadersMiddleware': 542,
+    # 'real_estate_scraper.middlewares.RealEstateScraperDownloaderMiddleware': 543,
     'scrapy_splash.SplashCookiesMiddleware': 723,
     'scrapy_splash.SplashMiddleware': 725,
-    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810#,
-    #'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 722,
+    'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
+    # 'scrapy.downloadermiddlewares.robotstxt.RobotsTxtMiddleware': 722,
 
 }
 # Enable or disable extensions
