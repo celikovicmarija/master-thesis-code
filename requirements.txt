@@ -5,19 +5,17 @@ sqlalchemy
 splash
 scrapy-splash
 Pillow
-scrapy-inline-requests
 html-to-json
 scrapy-deltafetch
 pyspark
 wheel
-overpy
 pandas
 pyarrow
-tabula-py
-tabulate
-docx2pdf
-PyPDF2
-camelot-py[cv]
 pandas
 numpy
-ghostscript
+cyrtranslit
+#tabula-py
+#overpy
+apache-airflow
+apache-airflow-providers-amazon
+apache-airflow[amazon] ??

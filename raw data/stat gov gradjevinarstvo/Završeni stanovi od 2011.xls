@@ -1,0 +1,32 @@
+,<table class="pvtTable" data-numrows="1" data-numcols="22" id="Tabela"><thead><tr><th colspan="2" rowspan="2"></th><th class="pvtAxisLabel">Period</th><th class="pvtColLabel" colspan="2">2011</th><th class="pvtColLabel" colspan="2">2012</th><th class="pvtColLabel" colspan="2">2013</th><th class="pvtColLabel" colspan="2">2014</th><th class="pvtColLabel" colspan="2">2015</th><th class="pvtColLabel" colspan="2">2016</th><th class="pvtColLabel" colspan="2">2017</th><th class="pvtColLabel" colspan="2">2018</th><th class="pvtColLabel" colspan="2">2019</th><th class="pvtColLabel" colspan="2">2020</th><th class="pvtColLabel" colspan="2">2021</th></tr><tr><th class="pvtAxisLabel">Vrsta podatka</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th><th class="pvtColLabel" colspan="1" rowspan="2">Broj završenih stanova - ukupno</th><th class="pvtColLabel" colspan="1" rowspan="2">Površina završenih stanova - ukupno, m²</th></tr><tr><th class="pvtAxisLabel">Indikator</th><th class="pvtAxisLabel">Teritorija - NSTJ</th><th></th></tr></thead><tbody><tr><th class="pvtRowLabel" rowspan="1">Završeni stanovi od 2011. godine</th><th class="pvtRowLabel" rowspan="1" colspan="2">REPUBLIKA SRBIJA</th><td class="pvtVal row0 col0" data-value="18449">18449</td><td class="pvtVal row0 col1" data-value="1184689">1184689</td><td class="pvtVal row0 col2" data-value="15223">15223</td><td class="pvtVal row0 col3" data-value="945145">945145</td><td class="pvtVal row0 col4" data-value="13505">13505</td><td class="pvtVal row0 col5" data-value="852488">852488</td><td class="pvtVal row0 col6" data-value="11097">11097</td><td class="pvtVal row0 col7" data-value="706449">706449</td><td class="pvtVal row0 col8" data-value="10306">10306</td><td class="pvtVal row0 col9" data-value="659876">659876</td><td class="pvtVal row0 col10" data-value="11332">11332</td><td class="pvtVal row0 col11" data-value="782841">782841</td><td class="pvtVal row0 col12" data-value="14080">14080</td><td class="pvtVal row0 col13" data-value="1018066">1018066</td><td class="pvtVal row0 col14" data-value="18051">18051</td><td class="pvtVal row0 col15" data-value="1336589">1336589</td><td class="pvtVal row0 col16" data-value="24803">24803</td><td class="pvtVal row0 col17" data-value="1961112">1961112</td><td class="pvtVal row0 col18" data-value="25326">25326</td><td class="pvtVal row0 col19" data-value="1857690">1857690</td><td class="pvtVal row0 col20" data-value="28874 <sup>(p)</sup>">28874 <sup>(p)</sup></td><td class="pvtVal row0 col21" data-value="2161492 <sup>(p)</sup>">2161492 <sup>(p)</sup></td></tr><tr><td><br>Datum ažuriranja:  1.8.2022.<br>Izvor:  RZS<br>Napomena: od 1999. bez podataka za AP Kosovo i Metohija<br>Spisak oznaka:</td></tr>
+        <tr class="legend-row">
+                <td class="legend-id">b</td>
+                <td>Prekid vremenske serije</td>
+                <td class="legend-id">c</td>
+                <td>Poverljiv podatak</td>
+                <td class="legend-id">d</td>
+                <td>Razlika u definiciji</td>
+</tr><tr class="legend-row">                <td class="legend-id">e</td>
+                <td>Procenjena vrednost</td>
+                <td class="legend-id">f</td>
+                <td>Prognozirana vrednost</td>
+                <td class="legend-id">i</td>
+                <td>Imputirana vrednost</td>
+</tr><tr class="legend-row">                <td class="legend-id">l</td>
+                <td>Nedostaje vrednost - postoje podaci, ali nisu prikupljeni</td>
+                <td class="legend-id">-</td>
+                <td>Nedostaje vrednost - podaci ne mogu postojati</td>
+                <td class="legend-id">n</td>
+                <td>Nije znacajna</td>
+</tr><tr class="legend-row">                <td class="legend-id">…</td>
+                <td>Ne raspolaže se podatkom</td>
+                <td class="legend-id">p</td>
+                <td>Prethodni podatak</td>
+                <td class="legend-id">u</td>
+                <td>Niska pouzdanost</td>
+</tr><tr class="legend-row">                <td class="legend-id">r</td>
+                <td>Revidiran podatak</td>
+                <td class="legend-id">*</td>
+                <td>Ispravljen podatak </td>
+        </tr>
+    </tbody></table>
