@@ -139,4 +139,7 @@ dmypy.json
 archive/
 raw data/
 airflow-docker/dags/real_estate_scraper/real_estate_scraper/logs/*
+airflow-docker/dags/data_preparation/raw_data/geoapify
+airflow-docker/dags/data_preparation/raw_data/scraper
+airflow-docker/dags/data_preparation/raw_data/*.csv
 aws_archive/
