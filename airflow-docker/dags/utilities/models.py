@@ -1,8 +1,8 @@
 # coding: utf-8
-from sqlalchemy import BigInteger, Column, DECIMAL, Date, ForeignKey, SmallInteger, String, Table, text
+from sqlalchemy import BigInteger, Column, DECIMAL, Date, ForeignKey, SmallInteger, String, text
 from sqlalchemy.dialects.mysql import TEXT, TINYINT, VARCHAR
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 metadata = Base.metadata
@@ -41,13 +41,13 @@ class ExchangeRateCdc(Base):
     cdc_id = Column(BigInteger, primary_key=True)
 
 
-t_exchange_rates = Table(
-    'exchange_rates', metadata,
-    Column('exchange_rate_id', BigInteger, nullable=False, unique=True),
-    Column('price_EUR_USD', DECIMAL(20, 4)),
-    Column('exchange_date', Date, nullable=False),
-    Column('price_EUR_RSD', DECIMAL(20, 4))
-)
+class ExchangeRate(Base):
+    __tablename__ = 'exchange_rates'
+
+    exchange_rate_id = Column(BigInteger, primary_key=True)
+    price_EUR_USD = Column(DECIMAL(20, 4))
+    exchange_date = Column(Date, nullable=False)
+    price_EUR_RSD = Column(DECIMAL(20, 4))
 
 
 class Geocode(Base):
@@ -110,7 +110,7 @@ class RealEstatePostCdc(Base):
     date = Column(Date)
     description = Column(TEXT)
     text = Column(VARCHAR(20))
-    heating_type_id = Column(TINYINT, server_default=text("'13'"))
+    heating_type_id = Column(TINYINT)  # , server_default=text("'13'")
     link = Column(TEXT)
     location = Column(TEXT)
     micro_location = Column(VARCHAR(200))
@@ -162,18 +162,22 @@ class TransactionType(Base):
     transaction_type_id = Column(TINYINT, primary_key=True)
 
 
-t_air_quality = Table(
-    'air_quality', metadata,
-    Column('measurement_id', BigInteger, nullable=False, unique=True),
-    Column('date', Date, nullable=False),
-    Column('pm25', SmallInteger),
-    Column('pm10', SmallInteger),
-    Column('o3', SmallInteger),
-    Column('no2', SmallInteger),
-    Column('so2', SmallInteger),
-    Column('co', SmallInteger),
-    Column('monitoring_station_id', ForeignKey('monitoring_station.monitoring_station_id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False, index=True)
-)
+class AirQuality(Base):
+    __tablename__ = 'air_quality'
+
+    measurement_id = Column(BigInteger, primary_key=True)
+    date = Column(Date, nullable=False)
+    pm25 = Column(SmallInteger)
+    pm10 = Column(SmallInteger)
+    o3 = Column(SmallInteger)
+    no2 = Column(SmallInteger)
+    so2 = Column(SmallInteger)
+    co = Column(SmallInteger)
+    monitoring_station_id = Column(
+        ForeignKey('monitoring_station.monitoring_station_id', ondelete='CASCADE', onupdate='CASCADE'), nullable=False,
+        index=True)
+
+    monitoring_station = relationship('MonitoringStation')
 
 
 class InterestRate(Base):
@@ -183,7 +187,8 @@ class InterestRate(Base):
     date = Column(Date)
     value = Column(DECIMAL(10, 3))
     period = Column(VARCHAR(10))
-    interest_rate_type = Column(ForeignKey('interest_rate_type.interest_rate_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
+    interest_rate_type = Column(
+        ForeignKey('interest_rate_type.interest_rate_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
 
     interest_rate_type1 = relationship('InterestRateType')
 
@@ -234,7 +239,8 @@ class RealEstatePost(Base):
     date = Column(Date)
     description = Column(TEXT)
     floor_number = Column(TEXT)
-    heating_type_id = Column(ForeignKey('heating_type.heating_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True, server_default=text("'13'"))
+    heating_type_id = Column(ForeignKey('heating_type.heating_type_id', ondelete='RESTRICT', onupdate='RESTRICT'),
+                             index=True, server_default=text("'13'"))
     link = Column(TEXT)
     location = Column(TEXT)
     micro_location = Column(VARCHAR(200))
@@ -244,15 +250,18 @@ class RealEstatePost(Base):
     object_type = Column(VARCHAR(50))
     price = Column(DECIMAL(18, 0))
     price_per_unit = Column(DECIMAL(18, 0))
-    real_estate_type_id = Column(ForeignKey('real_estate_type.real_estate_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
+    real_estate_type_id = Column(
+        ForeignKey('real_estate_type.real_estate_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
     size = Column(DECIMAL(18, 0))
     street = Column(VARCHAR(200))
     title = Column(TEXT)
     total_number_of_floors = Column(VARCHAR(20))
-    transaction_type_id = Column(ForeignKey('transaction_type.transaction_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
+    transaction_type_id = Column(
+        ForeignKey('transaction_type.transaction_type_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
     is_listed = Column(TINYINT(1))
     source_id = Column(ForeignKey('source.source_id'), index=True)
-    measurement_id = Column(ForeignKey('size_measurement.measurement_id', ondelete='RESTRICT', onupdate='RESTRICT'), index=True)
+    measurement_id = Column(ForeignKey('size_measurement.measurement_id', ondelete='RESTRICT', onupdate='RESTRICT'),
+                            index=True)
     geocode_id = Column(ForeignKey('geocode.geocode_id'), index=True)
 
     geocode = relationship('Geocode')
@@ -277,7 +286,8 @@ class PlaceDetailsSubcategory(Base):
     __tablename__ = 'place_details_subcategory'
 
     place_details_id = Column(ForeignKey('place_details.place_details_id'), nullable=False, index=True)
-    subcategory_id = Column(ForeignKey('subcategory.subcategory_id', ondelete='RESTRICT', onupdate='RESTRICT'), nullable=False, index=True)
+    subcategory_id = Column(ForeignKey('subcategory.subcategory_id', ondelete='RESTRICT', onupdate='RESTRICT'),
+                            nullable=False, index=True)
     id = Column(BigInteger, primary_key=True)
 
     place_details = relationship('PlaceDetail')
