@@ -32,7 +32,7 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-
+*.docx
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
@@ -109,7 +109,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+vnv/
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -127,10 +127,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-
-*.csv
+*.xls
+*.xlsx
+*.csvt
+*.pdf
+*.doc
+*.docx
 .idea
-vnv
-venv
 .scrapy
-real_estate_scraper/real_estate_scraper/logs/*
+archive/
+raw data/
+airflow-docker/dags/real_estate_scraper/real_estate_scraper/logs/*
+aws_archive/
