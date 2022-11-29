@@ -133,6 +133,7 @@ dmypy.json
 *.pdf
 *.doc
 *.docx
+*.jar
 .idea
 .scrapy
 archive/
