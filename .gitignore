@@ -132,6 +132,7 @@ dmypy.json
 *.csvt
 *.pdf
 *.doc
+*.sql
 *.docx
 *.jar
 .idea
