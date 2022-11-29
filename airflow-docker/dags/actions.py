@@ -2,7 +2,6 @@ import datetime
 from typing import List
 
 import requests
-from requests.structures import CaseInsensitiveDict
 from sqlalchemy import select
 
 from utilities.config import get_keys_and_constants
@@ -29,7 +28,8 @@ def find_eur_to_rsd_and_usd_exchange_rate_for_today():
         result = response.json()
         exchange_rate = extract_daily_exchange_rate(result, today)
     except Exception as e:
-        print(f'Failed to retrieve exchange rate for {today}: {str(e)}')
+        msg = f'Could not retrieve exchange rate for: {str(e)}'
+        raise Exception(msg)
 
     save_exchange_rate_to_db(exchange_rate)
 
@@ -38,11 +38,16 @@ def save_exchange_rate_to_db(exchange_rate: ExchangeRate) -> None:
     try:
         if exchange_rate is not None:
             with create_session() as session:
-                session.add(exchange_rate)
-                session.commit()
+                try:
+                    session.add(exchange_rate)
+                    session.commit()
+                except Exception as e:
+                    session.rollback()
+                    msg = f'Could not save exchange rate to the db: {str(e)}'
+                    raise Exception(msg)
     except Exception as e:
-        session.rollback()
-        print(f'Could not save exchange rate to the db: {str(e)}')
+        msg = f'Could not connect to the database{str(e)}'
+        raise Exception(msg)
 
 
 def extract_daily_exchange_rate(result: dict, today: datetime.date) -> ExchangeRate:
@@ -76,11 +81,15 @@ def send_request_to_find_stations() -> dict:
 def save_monitoring_station_to_db(station: MonitoringStation) -> None:
     try:
         with create_session() as session:
-            session.add(station)
-            session.commit()
+            try:
+                session.add(station)
+                session.commit()
+            except Exception as e:
+                session.rollback()
+                msg = f'Could not save station to the db: {str(e)}'
+                raise Exception(msg)
     except Exception as e:
-        session.rollback()
-        msg = f'Could not save station to the db: {str(e)}'
+        msg = f'Could not connect to the database{str(e)}'
         raise Exception(msg)
 
 
@@ -109,11 +118,15 @@ def save_air_quality_to_db(w_aqi: AirQuality) -> None:
     try:
         if w_aqi is not None:
             with create_session() as session:
-                session.add(w_aqi)
-                session.commit()
+                try:
+                    session.add(w_aqi)
+                    session.commit()
+                except Exception as e:
+                    session.rollback()
+                    msg = f'Could not save measurement to the db: {str(e)}'
+                    raise Exception(msg)
     except Exception as e:
-        session.rollback()
-        msg = f'Could not save measurement to the db: {str(e)}'
+        msg = f'Could not connect to the database{str(e)}'
         raise Exception(msg)
 
 
