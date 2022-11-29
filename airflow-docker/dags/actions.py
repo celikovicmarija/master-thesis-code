@@ -2,6 +2,7 @@ import datetime
 from typing import List
 
 import requests
+from requests.structures import CaseInsensitiveDict
 from sqlalchemy import select
 
 from utilities.config import get_keys_and_constants
