@@ -147,3 +147,4 @@ airflow-docker/dags/real_estate_scraper/real_estate_scraper/*.txt
 aws_archive/
 access/
 raw data/*
+airflow-docker/logs/scheduler/latest
