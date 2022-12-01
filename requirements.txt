@@ -36,3 +36,4 @@ statsmodels
 scikit-plot
 apache-airflow-providers-apache-spark
 inline_requests
+apache-airflow-providers-apache-spark

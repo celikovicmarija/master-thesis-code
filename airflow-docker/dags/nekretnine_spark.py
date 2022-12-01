@@ -1,5 +1,6 @@
 from pyspark.sql import *
 from pyspark.sql import functions as f
+from pyspark.sql.types import DoubleType
 
 from utilities.pyspark_utils import clean_from_characters, capitalize_words_and_lowercase, trim_from_spaces
 from utilities.pyspark_utils import load_posts_data, build_spark_session, save_file_to_csv
@@ -36,6 +37,10 @@ def process_nekretnine_pyspark():
     nekretnine_df = clean_from_characters(nekretnine_df)
 
     nekretnine_df = nekretnine_df.withColumn('source', f.lit('nekretnine'))
+
+    nekretnine_df = nekretnine_df.withColumn("price", nekretnine_df.price.cast(DoubleType()))
+    nekretnine_df = nekretnine_df.withColumn("price_per_unit", nekretnine_df.price_per_unit.cast(DoubleType()))
+    nekretnine_df = nekretnine_df.withColumn("monthly_bills", nekretnine_df.monthly_bills.cast(DoubleType()))
 
     nekretnine_df.show(500)
     # save_file_to_csv(nekretnine_df, '/opt/airflow/data/raw_data/scraper/new/nekretnine.csv')

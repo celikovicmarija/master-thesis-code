@@ -38,14 +38,14 @@ def build_spark_session() -> SparkSession:
         .master("local[4]") \
         .config("spark.jars", mysql_connector_jar) \
         .config("spark.sql.broadcastTimeout", "36000") \
-        .config("spark.sql.shuffle.partitions", "4000") \
+        .config("spark.sql.shuffle.partitions", "10000") \
         .config("spark.sql.autoBroadcastJoinThreshold ", "-1") \
         .config("spark.executor.memory", "100g") \
         .config("spark.driver.memory", "100g") \
         .getOrCreate()
 
 
-def load_data_pandas(spark: SparkSession, data_file: str, sep: str = ',', schema: StringType = None) -> DataFrame:
+def load_data_pandas(spark: SparkSession, data_file: str, sep: str = ',', schema: StructType = None) -> DataFrame:
     """
     Since pyspark's solution for importing csv files that contain comma lead to error,
     this function is created to handle the data frame creation. The assumption is
@@ -57,19 +57,16 @@ def load_data_pandas(spark: SparkSession, data_file: str, sep: str = ',', schema
     :return:
     """
     sql_sc = SQLContext(spark.sparkContext)
+    sc = spark.sparkContext
 
-    dfList = []
-    pandas_df = pd.read_csv(data_file, sep=sep, error_bad_lines=False, chunksize=50000)
 
-    for df in pandas_df:
-        dfList.append(df)
-    df = pd.concat(dfList, sort=False)
+    pandas_df = pd.read_csv(data_file, sep=sep, error_bad_lines=False)
+
     if not schema:
-        s_df = sql_sc.createDataFrame(df, schema=place_details_schema)
+        s_df = sql_sc.createDataFrame(pandas_df, schema=place_details_schema).repartition(120)
     else:
-        s_df = sql_sc.createDataFrame(df, schema=schema)
+        s_df = sql_sc.createDataFrame(pandas_df, schema=schema).repartition(120)
     return s_df
-
 
 # TODO: remove duplicated functions
 
@@ -99,7 +96,7 @@ def read_from_db(spark: SparkSession, table: str) -> DataFrame:
         dbtable=table,
         user=user,
         password=pwd).option('fetchsize', '100000').load()
-    df.repartition(1000)
+    df.repartition(100000)
     return df
 
 
@@ -130,7 +127,7 @@ def load_posts_data(spark: SparkSession, data_file: str) -> DataFrame:
         .option("driver", mysql_driver) \
         .csv(data_file, multiLine=True, columnNameOfCorruptRecord='broken',
              encoding='utf-8')  # .option("inferSchema", "true")         # .option("mode", "FAILFAST") \
-    df.repartition(25)
+    df.repartition(35)
     return df
 
 
@@ -256,7 +253,7 @@ real_estate_db_schema = StructType([
 ])
 
 place_details_schema = StructType([
-    StructField('_c0', IntegerType(), nullable=True),
+    StructField('col', IntegerType(), nullable=True),
     StructField('street_oglasi', StringType(), nullable=True),
     StructField('micro_location_oglasi', StringType(), nullable=True),
     StructField('name', StringType(), nullable=True),

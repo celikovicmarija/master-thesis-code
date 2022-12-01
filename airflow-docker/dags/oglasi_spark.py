@@ -1,61 +1,87 @@
 import sys
-
+import os
 from pyspark.sql import *
 from pyspark.sql import functions as f
+from pyspark.sql.types import DoubleType
 
 from utilities.pyspark_utils import clean_from_characters, capitalize_words_and_lowercase, trim_from_spaces, \
-    save_file_to_csv, load_posts_data, build_spark_session
+    save_file_to_csv, load_posts_data, build_spark_session, load_data
 
 sys.path.append('data_preparation')
 
 
 def process_oglasi_pyspark():
-    spark = build_spark_session()
+    try:
+        spark = build_spark_session()
 
-    conf_out = spark.sparkContext.getConf()
-    conf_out.toDebugString()
+        conf_out = spark.sparkContext.getConf()
+        conf_out.toDebugString()
 
-    # df = load_data(spark, '/opt/airflow/data/raw_data/scraper/new/oglasi.csv')
-    oglasi_df = load_posts_data(spark, 'data_preparation\\raw_data\\scraper\\new\\oglasi.csv')
-    oglasi_df = oglasi_df.dropDuplicates(['link'])
-    oglasi_df = oglasi_df.where(f.col('link').isNotNull())
+        # oglasi_df = load_data(spark, '/opt/airflow/data/raw_data/scraper/new/oglasi.csv')
+        oglasi_df = load_posts_data(spark, '/opt/airflow/data/raw_data/scraper/new/oglasi.csv')
+        # oglasi_df = load_posts_data(spark, 'data_preparation/raw_data/scraper/new/oglasi.csv')
+        oglasi_df = oglasi_df.dropDuplicates(['link'])
+        oglasi_df = oglasi_df.where(f.col('link').isNotNull())
+        oglasi_df.show()
 
-    oglasi_df = clean_from_characters(oglasi_df)
-    oglasi_df = capitalize_words_and_lowercase(oglasi_df)
-    # TODO: remove nakon prve ture:
-    oglasi_df = oglasi_df.drop(f.col('city_lines'))
 
-    oglasi_df = oglasi_df.withColumn('floor_number',
-                                     f.regexp_replace(f.col('floor_number'), '. sprat', ''))
+        oglasi_df = clean_from_characters(oglasi_df)
+        oglasi_df = capitalize_words_and_lowercase(oglasi_df)
+        # TODO: remove nakon prve ture:
+        oglasi_df = oglasi_df.drop(f.col('city_lines'))
+        oglasi_df.show()
 
-    oglasi_df = transform_heating_type(oglasi_df)
+        oglasi_df = oglasi_df.withColumn('floor_number',
+                                         f.regexp_replace(f.col('floor_number'), '. sprat', ''))
 
-    oglasi_df = oglasi_df.withColumn('w_type', f.when(f.lower(f.col('link')).contains('prodaja'), 'Prodaja') \
-                                     .when(f.lower(f.col('link')).contains('izdava'), 'Izdavanje').otherwise(None))
 
-    oglasi_df = is_the_property_listed(oglasi_df)
+        oglasi_df = transform_heating_type(oglasi_df)
 
-    oglasi_df = transform_number_of_rooms(oglasi_df)
+        oglasi_df = oglasi_df.withColumn('w_type', f.when(f.lower(f.col('link')).contains('prodaja'), 'Prodaja') \
+                                         .when(f.lower(f.col('link')).contains('izdava'), 'Izdavanje').otherwise(None))
 
-    oglasi_df = find_real_estate_type_oglasi(oglasi_df)
 
-    oglasi_df = transform_size_info(oglasi_df)
-    oglasi_df = transform_location_info(oglasi_df)
 
-    oglasi_df = clean_price(oglasi_df)
+        oglasi_df = is_the_property_listed(oglasi_df)
 
-    oglasi_df = oglasi_df.withColumn('source', f.lit('oglasi'))
-    oglasi_df = trim_from_spaces(oglasi_df)
-    oglasi_df = clean_from_characters(oglasi_df)
-    oglasi_df.show(500)
+        oglasi_df = transform_number_of_rooms(oglasi_df)
 
-    # save_file_to_csv(df, ''/opt/airflow/data/raw_data/scraper/processed/oglasi.csv')
-    save_file_to_csv(oglasi_df, 'data_preparation\\raw_data\\scraper\\processed\\oglasi.csv')
-    # df_for_geocoding = extract_columns_for_geoapify(place_details)
-    # send_and_receive_geocoding(df_for_geocoding)
-    # send_and_receive_place_api()
-    # send_and_receive_place_details_api()
+        oglasi_df = find_real_estate_type_oglasi(oglasi_df)
+        oglasi_df.show()
 
+
+        oglasi_df = transform_size_info(oglasi_df)
+        oglasi_df.show()
+
+        oglasi_df = transform_location_info(oglasi_df)
+
+        oglasi_df = clean_price(oglasi_df)
+        oglasi_df.show()
+
+        oglasi_df = oglasi_df.withColumn('source', f.lit('oglasi'))
+        oglasi_df = trim_from_spaces(oglasi_df)
+        oglasi_df = clean_from_characters(oglasi_df)
+        oglasi_df = oglasi_df.withColumn("price", oglasi_df.price.cast(DoubleType()))
+        oglasi_df = oglasi_df.withColumn("price_per_unit", oglasi_df.price_per_unit.cast(DoubleType()))
+        oglasi_df = oglasi_df.withColumn("monthly_bills", oglasi_df.monthly_bills.cast(DoubleType()))
+        oglasi_df.show()
+
+
+        save_file_to_csv(oglasi_df, '/opt/airflow/data/raw_data/scraper/processed/oglasi.csv')
+        # save_file_to_csv(oglasi_df, 'data_preparation/raw_data/scraper/processed/oglasi.csv')
+        # df_for_geocoding = extract_columns_for_geoapify(place_details)
+        # send_and_receive_geocoding(df_for_geocoding)
+        # send_and_receive_place_api()
+        # send_and_receive_place_details_api()
+    except Exception as e:
+        print('*******************************************')
+        print('*******************************************')
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print('*******************************************')
+        print('*******************************************')
+        raise Exception()
 
 def transform_size_info(oglasi_df: DataFrame) -> DataFrame:
     """
@@ -131,10 +157,14 @@ def transform_location_info(oglasi_df: DataFrame) -> DataFrame:
                                                                   f.split(f.trim(f.col('location')), '\\)')[0], '\\(',
                                                                   ''))).otherwise(
         f.trim(f.split(f.trim(f.col('location')), '\\(')[0])))
+    oglasi_df.show()
     oglasi_df = oglasi_df.withColumn('location', f.expr("replace(location,micro_location,'')"))
 
+    oglasi_df.show()
     oglasi_df = oglasi_df.withColumn('location', f.regexp_replace(f.col('location'), '  ', ' '))
-    oglasi_df = oglasi_df.withColumn('location', f.regexp_replace(f.col('location'), '\\(|\\)', ''))
+    oglasi_df.show()
+    oglasi_df = oglasi_df.withColumn('location', f.regexp_replace(f.col('location'), '(/(|/))', ''))
+    oglasi_df.show()
 
     oglasi_df = oglasi_df.withColumn('location', f.regexp_replace('location', 'Novi Beograd', 'NBGD')) \
         .withColumn('location', f.regexp_replace('location', 'Novi Sad', 'NS')) \
@@ -151,6 +181,7 @@ def transform_location_info(oglasi_df: DataFrame) -> DataFrame:
 
     oglasi_df = oglasi_df.withColumn('city', f.split(f.trim(f.col('location')), ' ')[0])
     oglasi_df = oglasi_df.withColumn('location', f.split(f.trim(f.col('location')), ' ')[1])
+    oglasi_df.show()
 
     oglasi_df = oglasi_df.withColumn('location', f.regexp_replace('location', 'NBGD', 'Novi Beograd')) \
         .withColumn('location', f.regexp_replace('location', 'NS', 'Novi Sad')) \
@@ -177,6 +208,7 @@ def transform_location_info(oglasi_df: DataFrame) -> DataFrame:
         .withColumn('city', f.regexp_replace('city', 'SK', 'Sremski Karlovci')) \
         .withColumn('city', f.regexp_replace('city', 'SV', 'Savski Venac')) \
         .withColumn('city', f.regexp_replace('city', 'SP', 'Stara Pazova'))
+    oglasi_df.show()
 
     oglasi_df = oglasi_df.withColumn('city', f.when((f.trim('city')) == '', f.lit(None)).otherwise(f.col('city')))
     return oglasi_df
