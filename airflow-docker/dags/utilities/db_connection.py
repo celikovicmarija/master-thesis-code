@@ -27,8 +27,8 @@ def create_session(conn_string: str = None) -> Session:
 # TODO: make this read env variables
 def _create_connection_string()-> str:
     """This is a shortcut"""
-    # return 'mysql+pymysql://root:password@host.docker.internal:3306/real_estate_db'
-    return 'mysql+pymysql://root:password@localhost:3306/real_estate_db'
+    return 'mysql+pymysql://root:password@host.docker.internal:3306/real_estate_db'
+    # return 'mysql+pymysql://root:password@localhost:3306/real_estate_db'
     # return 'mysql+pymysql://root:password@localhost:3306/dw_real_estate'
 
 

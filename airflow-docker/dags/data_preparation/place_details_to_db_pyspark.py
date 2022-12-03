@@ -36,7 +36,7 @@ def transliterate_to_latin_places(df):
         df = df.withColumn(col,
                            f.when(f.col(col).isNull(), '').otherwise(f.col(col)))
     df.fillna(value='',
-              subset=['name', 'formatted', 'address_line1', 'address_line2']).show()
+              subset=['name', 'formatted', 'address_line1', 'address_line2'])
     df = transliterate_serbian_places(df)
     return df
 
@@ -45,11 +45,9 @@ if __name__ == "__main__":
     spark = build_spark_session()
     conf_out = spark.sparkContext.getConf()
     conf_out.toDebugString()
-
-    place_details = load_data_pandas(spark, 'raw_data\\geoapify\\place_details_more_details.csv')
-    print(f'HERE WE HAVE {place_details.count()} rows')
+    place_details = load_data_pandas(spark, 'raw_data\\geoapify\\place_details_more_details_35_11'
+                                            '.csv')
     place_details = transliterate_to_latin_places(place_details)
-
     all_columns = []
     for col in place_details.columns:
         all_columns.append(col)
@@ -57,6 +55,8 @@ if __name__ == "__main__":
     ####FIND FOREIGN KEY FOR GEOCODE
 
     geocoded_df = read_from_db(spark, 'geocode')
+    # for c in ['name','city', 'county', 'formatted','feature_type','address_line1','address_line2','street_oglasi','micro_location_oglasi']:
+    #     geocoded_df = geocoded_df.withColumn(c,  f.when(f.col(c) == "NaN", '').otherwise(f.col(c)))
 
     # remove any extra spaces, just in case
     place_details = place_details.withColumn('street_oglasi', f.trim(f.lower(f.col('street_oglasi'))))
@@ -85,27 +85,31 @@ if __name__ == "__main__":
     geocoded_df = geocoded_df.select(*(f.col(x).alias(x + '_geo') for x in geocoded_df.columns))
 
     # join the data frames
-    df = place_details.join(geocoded_df, (f.col('street_oglasi').eqNullSafe(f.col('street_oglasi_geo'))) &
-                            (f.col('micro_location_oglasi').eqNullSafe(f.col('micro_location_oglasi_geo'))), how='left')
+    df = place_details.join(geocoded_df, (f.col('street_oglasi').eqNullSafe(f.col('street_oglasi_geo')) &
+                                          f.col('micro_location_oglasi').eqNullSafe(
+                                              f.col('micro_location_oglasi_geo'))) | (
+                                f.col('street_oglasi_geo').eqNullSafe(f.col('street_oglasi')))
+                            , how='left')
+
     df = df.withColumnRenamed('geocode_id_geo', 'geocode_id')
-    df = df.dropDuplicates(['_c0'])
+    df = df.dropDuplicates(['col'])
 
     # pick columns to write to the db
     all_columns.remove('street_oglasi')
     all_columns.remove('micro_location_oglasi')
     all_columns.append('geocode_id')
-    all_columns.remove('_c0')
-
-    # all_columns.append('street_oglasi_geo')
-    # all_columns.append('micro_location_oglasi_geo')
+    all_columns.remove('col')
 
     #############SAVE TO THE DATABASE
     place_details = df.select(all_columns).filter(f.col('geocode_id').isNotNull())
-    print(f'HERE WE HAVE {place_details.count()} rows')
-    place_details.select([f.count(f.when(f.isnull(c), c)).alias(c) for c in ['geocode_id']]).show()
-    # place_details.select(['street_oglasi_geo','micro_location_oglasi_geo','street_oglasi','micro_location_oglasi']).filter(f.isnull(f.col('geocode_id'))).distinct().show(
-    #     10000000, truncate=False)
 
     print(f'HERE WE HAVE {place_details.count()} rows')
-    # place_details.show()
-    save_data_to_db_table(place_details, 'place_details')
+
+    place_details_df = place_details.select('name'
+                                            , 'city', 'county', 'lon', 'lat', 'formatted', 'feature_type',
+                                            'address_line1', 'address_line2', 'categories')
+
+    for c in ['name', 'city', 'county', 'formatted', 'feature_type', 'address_line1', 'address_line2', 'categories']:
+        place_details_df = place_details_df.withColumn(c, f.when(f.col(c) == "NaN", '').otherwise(f.col(c)))
+
+    save_data_to_db_table(place_details_df, 'place_details')

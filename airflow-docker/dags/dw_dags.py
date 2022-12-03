@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 
-# these three dags are independent of each other
-
+from utilities.pyspark_utils import get_keys_and_constants
+keys = get_keys_and_constants()
+mysql_jar = keys.mysql_connector_jar
 default_args = {
     'owner': 'Marija Celikovic',
     'depends_on_past': False,
@@ -25,8 +26,8 @@ with DAG(
         task_id='interest_rate_to_dw',
         conn_id='spark_local',
         application='dags/interest_rate_to_dw.py',
-        driver_class_path="/opt/airflow/dags/mysql-connector-java-8.0.30.jar",
-        jars="/opt/airflow/dags/mysql-connector-java-8.0.30.jar",
+        driver_class_path=mysql_jar,
+        jars=mysql_jar,
         total_executor_cores=2,
         name='My_Spark',
         dag=dag
@@ -35,8 +36,8 @@ with DAG(
         task_id='air_quality_to_dw',
         conn_id='spark_local',
         application='dags/air_quality_to_dw.py',
-        driver_class_path="/opt/airflow/dags/mysql-connector-java-8.0.30.jar",
-        jars="/opt/airflow/dags/mysql-connector-java-8.0.30.jar",
+        driver_class_path=mysql_jar,
+        jars=mysql_jar,
         total_executor_cores=2,
         name='My_Spark',
         dag=dag
@@ -45,8 +46,8 @@ with DAG(
         task_id='real_estate_to_dw',
         conn_id='spark_local',
         application='dags/extract_real_estate_to_dw.py',
-        driver_class_path="/opt/airflow/dags/mysql-connector-java-8.0.30.jar",
-        jars="/opt/airflow/dags/mysql-connector-java-8.0.30.jar",
+        driver_class_path=mysql_jar,
+        jars=mysql_jar,
         total_executor_cores=2,
         name='My_Spark',
         dag=dag

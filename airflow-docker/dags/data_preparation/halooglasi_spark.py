@@ -48,8 +48,8 @@ def is_rent_or_sell(oglasi_df: DataFrame) -> DataFrame:
     """
     Na osnovu URL-a može se otkriti da li je nekretnina za prodaju
     ili izdavanje.
-    :param oglasi_df:
-    :return:
+    :param oglasi_df:DataFrame
+    :return: DataFrame
     """
     oglasi_df = oglasi_df.withColumn('w_type', f.when(f.lower(f.col('link')).contains('prodaja'), 'Prodaja') \
                                      .when(f.lower(f.col('link')).contains('izdava'), 'Izdavanje').otherwise(None))
@@ -59,8 +59,8 @@ def is_rent_or_sell(oglasi_df: DataFrame) -> DataFrame:
 def clean_monthly_bills(df: DataFrame) -> DataFrame:
     """
     Ova kolona ima vrednost u evrima. Čisti se od nenumeričkih karaktera.
-    :param df:
-    :return:
+    :param df:DataFrame
+    :return:DataFrame
     """
     df = df.withColumn('monthly_bills',
                        f.regexp_replace(f.col('monthly_bills'), '[^0-9]', ''))
@@ -76,8 +76,8 @@ def is_property_listed(df: DataFrame) -> DataFrame:
     """
     Iz additional kolone traži informacija o uknjiženosti nekretnine.
     Podrazumevana vrednost je nula.
-    :param df:
-    :return:
+    :param df:DataFrame
+    :return:DataFrame
     """
     df = df.withColumn('is_listed', f.when(f.lower(f.col('additional')).contains('uknj') | \
                                            f.lower(f.col('description')).contains('uknj') | \
@@ -90,8 +90,8 @@ def transform_size_info(df: DataFrame) -> DataFrame:
     """
     Postoje dve moguće vrednosti za jedinicu mere: ar i m2. Ta informacija je sadržana u koloni size_in_squared_meters.
     Ta kolona se i čisti od prikrivenih null vrednosti.
-    :param df:
-    :return:
+    :param df:DataFrame
+    :return:DataFrame
     """
     df = df.withColumn('size_metric',
                        f.when(f.col('price_per_unit').contains('ar'), 'ar').otherwise(
@@ -120,8 +120,8 @@ def clean_price(df: DataFrame) -> DataFrame:
     Zato se broj ovde množi sa hiljadu.
     Popunjavaju se vrednosti o ceni i ceni na kvadratu gde je to moguće.
     Odstranjuju se svi redovi u kojima nema nikakvog podatka o ceni.
-    :param df:
-    :return:
+    :param df:DataFrame
+    :return:DataFrame
     """
     df = df.withColumn('price_per_unit',
                        f.regexp_replace(f.col('price_per_unit'), r'\D+', ''))
@@ -191,8 +191,8 @@ def find_real_estate_type(df: DataFrame) -> DataFrame:
     """
     Iz sačuvanom URL-a se pronalazi tip nekretnine, i postavlja se da bude u skladu sa onim što je
     u bazi podataka.
-    :param df:
-    :return:
+    :param df:DataFrame
+    :return:DataFrame
     """
     df = df.withColumn('real_estate_type', f.when(f.lower(f.col('link')).contains('stanova/'), 'Stan')
                        .when(f.lower(f.col('link')).contains('kuca/'), 'Kuca')

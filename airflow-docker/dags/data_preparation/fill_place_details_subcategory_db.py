@@ -26,7 +26,7 @@ def fill_place_details_subcategory_db():
                                                  place_df.categories.contains(subcategory_df.subcategory_name))),
                             how='inner')
 
-    join_df = join_df.select(f.col('subcategory_id'), f.col('place_id')).filter(
+    join_df = join_df.select(f.col('subcategory_id'), f.col('place_details_id')).filter(
         f.col('subcategory_id').isNotNull()).distinct()
     save_data_to_db_table(join_df, 'place_details_subcategory')
 

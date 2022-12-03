@@ -35,13 +35,18 @@ def build_spark_session() -> SparkSession:
     os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
     return SparkSession.builder \
         .appName("My_Spark") \
-        .master("local[4]") \
+        .master("local[*]") \
         .config("spark.jars", mysql_connector_jar) \
         .config("spark.sql.broadcastTimeout", "36000") \
-        .config("spark.sql.shuffle.partitions", "10000") \
+        .config("spark.sql.shuffle.partitions", "10") \
+        .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
         .config("spark.sql.autoBroadcastJoinThreshold ", "-1") \
         .config("spark.executor.memory", "100g") \
-        .config("spark.driver.memory", "100g") \
+        .config("spark.driver.memory", "200g") \
+        .config("spark.memory.offHeap.enabled", "true") \
+        .config("spark.memory.offHeap.size", "16g") \
+        .config("spark.sql.autoBroadcastJoinThreshold", "-1") \
+        .config("spark.sparkContext.defaultParallelism", "true") \
         .getOrCreate()
 
 
@@ -59,7 +64,6 @@ def load_data_pandas(spark: SparkSession, data_file: str, sep: str = ',', schema
     sql_sc = SQLContext(spark.sparkContext)
     sc = spark.sparkContext
 
-
     pandas_df = pd.read_csv(data_file, sep=sep, error_bad_lines=False)
 
     if not schema:
@@ -67,6 +71,7 @@ def load_data_pandas(spark: SparkSession, data_file: str, sep: str = ',', schema
     else:
         s_df = sql_sc.createDataFrame(pandas_df, schema=schema).repartition(120)
     return s_df
+
 
 # TODO: remove duplicated functions
 
@@ -77,7 +82,7 @@ def save_data_to_dw_table(new_rows_to_add: DataFrame, table_name: str) -> None:
         driver=mysql_driver,
         dbtable=table_name,
         user=user,
-        password=pwd).option('batchsize', '100000').mode('append').save()
+        password=pwd).option('batchsize', '1000').mode('append').save()
 
 
 def save_data_to_db_table(new_rows_to_add: DataFrame, table_name: str) -> None:
@@ -86,7 +91,7 @@ def save_data_to_db_table(new_rows_to_add: DataFrame, table_name: str) -> None:
         driver=mysql_driver,
         dbtable=table_name,
         user=user,
-        password=pwd).option('batchsize', '100000').mode('append').save()
+        password=pwd).option('batchsize', '100').mode('append').save()
 
 
 def read_from_db(spark: SparkSession, table: str) -> DataFrame:
@@ -95,8 +100,8 @@ def read_from_db(spark: SparkSession, table: str) -> DataFrame:
         driver=mysql_driver,
         dbtable=table,
         user=user,
-        password=pwd).option('fetchsize', '100000').load()
-    df.repartition(100000)
+        password=pwd).option('fetchsize', '1000').load()
+    df.repartition(1000)
     return df
 
 
@@ -107,7 +112,7 @@ def read_from_dw(spark: SparkSession, table: str) -> DataFrame:
         dbtable=table,
         user=user,
         password=pwd).option('fetchsize', '100000').load()
-    df.repartition(25)
+    df.repartition(20)
     return df
 
 
@@ -116,8 +121,8 @@ def load_data(spark: SparkSession, data_file: str) -> DataFrame:
         .option("delimiter", ";") \
         .option("driver", mysql_driver) \
         .csv(data_file, multiLine=True, columnNameOfCorruptRecord='broken',
-             encoding='utf-8')  # .option("inferSchema", "true")         # .option("mode", "FAILFAST") \
-    df.repartition(25)
+             encoding='utf-8')
+    df.repartition(20)
     return df
 
 
@@ -127,7 +132,7 @@ def load_posts_data(spark: SparkSession, data_file: str) -> DataFrame:
         .option("driver", mysql_driver) \
         .csv(data_file, multiLine=True, columnNameOfCorruptRecord='broken',
              encoding='utf-8')  # .option("inferSchema", "true")         # .option("mode", "FAILFAST") \
-    df.repartition(35)
+    df.repartition(20)
     return df
 
 
@@ -183,7 +188,8 @@ def extract_columns_for_geoapify(df: DataFrame) -> DataFrame:
 
 
 def save_file_to_csv(df: DataFrame, file_name: str) -> None:
-    df.toPandas().to_csv(file_name, index=False, sep=';')
+    df.repartition(1).write.option("header", "true").option("sep", ";").mode("overwrite").option('batchsize',
+                                                                                                 '100').csv(file_name)
 
 
 def get_spark_app_config() -> SparkConf:
@@ -194,6 +200,7 @@ def get_spark_app_config() -> SparkConf:
     for (key, val) in config.items("SPARK_APP_CONFIGS"):
         spark_conf.set(key, val)
     return spark_conf
+
 
 halooglasi_schema = StructType([
     StructField('additional', StringType(), nullable=True),
@@ -222,7 +229,6 @@ halooglasi_schema = StructType([
     StructField('source', StringType(), nullable=True),
 
 ])
-
 
 real_estate_db_schema = StructType([
     StructField('additional', StringType(), nullable=True),

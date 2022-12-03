@@ -1,3 +1,6 @@
+import os
+import sys
+
 from pyspark.sql import *
 from pyspark.sql import functions as f
 from pyspark.sql.types import DoubleType
@@ -7,49 +10,54 @@ from utilities.pyspark_utils import load_posts_data, build_spark_session, save_f
 
 
 def process_nekretnine_pyspark():
-    spark = build_spark_session()
-    # nekretnine_df = load_data(spark, '/opt/airflow/data/raw_data/scraper/new/nekretnine.csv')
-    nekretnine_df = load_posts_data(spark, 'data_preparation\\raw_data\\scraper\\new\\nekretnine.csv')
+    try:
+        spark = build_spark_session()
+        nekretnine_df = load_posts_data(spark, '/opt/airflow/data/raw_data/scraper/new/nekretnine.csv')
+        # nekretnine_df = load_posts_data(spark, 'data_preparation\\raw_data\\scraper\\new\\nekretnine.csv')
 
-    # TODO: remove nakon prve ture
-    nekretnine_df = nekretnine_df.drop(f.col('city_lines'))
-    nekretnine_df = nekretnine_df.dropDuplicates(['link'])
-    nekretnine_df = nekretnine_df.where(f.col('link').isNotNull())
+        nekretnine_df = nekretnine_df.dropDuplicates(['link'])
+        nekretnine_df = nekretnine_df.where(f.col('link').isNotNull())
 
-    nekretnine_df = clean_from_characters(nekretnine_df)
-    nekretnine_df = capitalize_words_and_lowercase(nekretnine_df)
-    nekretnine_df = clean_price(nekretnine_df)
-    nekretnine_df = clean_description(nekretnine_df)
+        nekretnine_df = clean_from_characters(nekretnine_df)
+        nekretnine_df = capitalize_words_and_lowercase(nekretnine_df)
+        nekretnine_df = clean_price(nekretnine_df)
+        nekretnine_df = clean_description(nekretnine_df)
 
-    nekretnine_df = transform_heating_type(nekretnine_df)
+        nekretnine_df = transform_heating_type(nekretnine_df)
 
-    nekretnine_df = nekretnine_df.withColumn('title', f.regexp_replace(f.col('title'), '[^a-zA-Z0-9 :]', ''))
+        nekretnine_df = nekretnine_df.withColumn('title', f.regexp_replace(f.col('title'), '[^a-zA-Z0-9 :]', ''))
 
-    nekretnine_df = transform_property_size_data(nekretnine_df)
+        nekretnine_df = transform_property_size_data(nekretnine_df)
 
-    nekretnine_df = nekretnine_df.withColumn('floor_number', f.initcap('floor_number'))
+        nekretnine_df = nekretnine_df.withColumn('floor_number', f.initcap('floor_number'))
 
-    nekretnine_df = find_number_of_rooms(nekretnine_df)
-    nekretnine_df = find_real_estate_type_nekretnine(nekretnine_df)
-    nekretnine_df = extract_location_data(nekretnine_df)
-    nekretnine_df = is_property_listed(nekretnine_df)
-    nekretnine_df = trim_from_spaces(nekretnine_df)
-    nekretnine_df = clean_from_characters(nekretnine_df)
+        nekretnine_df = find_number_of_rooms(nekretnine_df)
+        nekretnine_df = find_real_estate_type_nekretnine(nekretnine_df)
+        nekretnine_df = extract_location_data(nekretnine_df)
+        nekretnine_df = is_property_listed(nekretnine_df)
+        nekretnine_df = trim_from_spaces(nekretnine_df)
+        nekretnine_df = clean_from_characters(nekretnine_df)
 
-    nekretnine_df = nekretnine_df.withColumn('source', f.lit('nekretnine'))
+        nekretnine_df = nekretnine_df.withColumn('source', f.lit('nekretnine'))
 
-    nekretnine_df = nekretnine_df.withColumn("price", nekretnine_df.price.cast(DoubleType()))
-    nekretnine_df = nekretnine_df.withColumn("price_per_unit", nekretnine_df.price_per_unit.cast(DoubleType()))
-    nekretnine_df = nekretnine_df.withColumn("monthly_bills", nekretnine_df.monthly_bills.cast(DoubleType()))
+        nekretnine_df = nekretnine_df.withColumn("price", nekretnine_df.price.cast(DoubleType()))
+        nekretnine_df = nekretnine_df.withColumn("price_per_unit", nekretnine_df.price_per_unit.cast(DoubleType()))
+        nekretnine_df = nekretnine_df.withColumn("monthly_bills", nekretnine_df.monthly_bills.cast(DoubleType()))
 
-    nekretnine_df.show(500)
-    # save_file_to_csv(nekretnine_df, '/opt/airflow/data/raw_data/scraper/new/nekretnine.csv')
-    save_file_to_csv(nekretnine_df, 'data_preparation\\raw_data\\scraper\\processed\\nekretnine.csv')
+        save_file_to_csv(nekretnine_df, '/opt/airflow/data/raw_data/scraper/processed/nekretnine.csv')
+        # save_file_to_csv(nekretnine_df, 'data_preparation\\raw_data\\scraper\\processed\\nekretnine.csv')
 
-    # df_for_geocoding = extract_columns_for_geoapify(place_details)
-    # send_and_receive_geocoding(df_for_geocoding)
-    # send_and_receive_place_api()
-    # send_and_receive_place_details_api()
+        # df_for_geocoding = extract_columns_for_geoapify(place_details)
+        # send_and_receive_geocoding(df_for_geocoding)
+        # send_and_receive_place_api()
+        # send_and_receive_place_details_api()
+    except Exception as e:
+        print('*******************************************')
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        print(exc_type, fname, exc_tb.tb_lineno)
+        print('*******************************************')
+        raise Exception()
 
 
 def transform_heating_type(nekretnine_df: DataFrame) -> DataFrame:
