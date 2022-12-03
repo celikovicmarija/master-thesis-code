@@ -117,7 +117,7 @@ with DAG(
         task_id='upload_nekretnine_raw_to_S3',
         python_callable=upload_file_to_S3,
         op_kwargs={
-            'filename': f'{data_location}r/new/nekretnine.csv',
+            'filename': f'{data_location}/new/nekretnine.csv',
             'key': f'{nekretnine_file[:-4]}-raw-{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
             'bucket_name': upload_bucket_name
         },
