@@ -120,7 +120,7 @@ def load_scraper_data_to_db(file: str = None):
 
     ############# SAVE TO THE DATABASE
     oglasi_df = df.select(all_columns)
-    save_file_to_csv(oglasi_df, '/opt/airflow/data/raw_data/scraper/ready_for_db/oglasi.csv')
+    save_file_to_csv(oglasi_df, f'/opt/airflow/data/raw_data/scraper/ready_for_db/{file}.csv')
 
     # save_data_to_db_table(oglasi_df, 'real_estate_post')
 

@@ -188,8 +188,9 @@ def extract_columns_for_geoapify(df: DataFrame) -> DataFrame:
 
 
 def save_file_to_csv(df: DataFrame, file_name: str) -> None:
-    df.repartition(1).write.option("header", "true").option("sep", ";").mode("overwrite").option('batchsize',
-                                                                                                 '100').csv(file_name)
+  #  df.repartition(1).write.option("header", "true").option("sep", ";").mode("overwrite").option('batchsize',
+   #                                                                                              '100').csv(file_name)
+    df.repartition(1).toPandas().to_csv(file_name, header=True, sep=';')
 
 
 def get_spark_app_config() -> SparkConf:

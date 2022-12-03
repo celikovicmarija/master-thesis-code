@@ -44,7 +44,7 @@ def process_nekretnine_pyspark():
         nekretnine_df = nekretnine_df.withColumn("price_per_unit", nekretnine_df.price_per_unit.cast(DoubleType()))
         nekretnine_df = nekretnine_df.withColumn("monthly_bills", nekretnine_df.monthly_bills.cast(DoubleType()))
 
-        save_file_to_csv(nekretnine_df, '/opt/airflow/data/raw_data/scraper/processed/nekretnine')
+        save_file_to_csv(nekretnine_df, '/opt/airflow/data/raw_data/scraper/processed/nekretnine.csv')
         # save_file_to_csv(nekretnine_df, 'data_preparation\\raw_data\\scraper\\processed\\nekretnine.csv')
 
         # df_for_geocoding = extract_columns_for_geoapify(place_details)

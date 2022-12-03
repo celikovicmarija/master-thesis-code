@@ -48,7 +48,7 @@ def process_oglasi_pyspark():
         oglasi_df = oglasi_df.withColumn("price_per_unit", oglasi_df.price_per_unit.cast(DoubleType()))
         oglasi_df = oglasi_df.withColumn("monthly_bills", oglasi_df.monthly_bills.cast(DoubleType()))
 
-        save_file_to_csv(oglasi_df, '/opt/airflow/data/raw_data/scraper/processed/oglasi')
+        save_file_to_csv(oglasi_df, '/opt/airflow/data/raw_data/scraper/processed/oglasi.csv')
         # save_file_to_csv(oglasi_df, 'data_preparation/raw_data/scraper/processed/oglasi.csv')
         # df_for_geocoding = extract_columns_for_geoapify(place_details)
         # send_and_receive_geocoding(df_for_geocoding)
