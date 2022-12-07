@@ -2,8 +2,10 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.providers.mysql.operators.mysql import MySqlOperator
 
 from utilities.pyspark_utils import get_keys_and_constants
+from utilities.sql_scripts import truncate_exchange_rate_cdc, truncate_air_quality_cdc, truncate_real_estate_cdc
 keys = get_keys_and_constants()
 mysql_jar = keys.mysql_connector_jar
 default_args = {
@@ -22,15 +24,14 @@ with DAG(
         default_args=default_args,
         catchup=False
 ) as dag:
-    interest_rate_to_dw = SparkSubmitOperator(
-        task_id='interest_rate_to_dw',
+    exchange_rate_to_dw = SparkSubmitOperator(
+        task_id='exchange_rate_to_dw',
         conn_id='spark_local',
-        application='dags/interest_rate_to_dw.py',
+        application='dags/exchange_rate_to_dw.py',
         driver_class_path=mysql_jar,
         jars=mysql_jar,
         total_executor_cores=2,
-        name='My_Spark',
-        dag=dag
+        name='My_Spark'
     )
     air_quality_to_dw = SparkSubmitOperator(
         task_id='air_quality_to_dw',
@@ -39,16 +40,36 @@ with DAG(
         driver_class_path=mysql_jar,
         jars=mysql_jar,
         total_executor_cores=2,
-        name='My_Spark',
-        dag=dag
+        name='My_Spark'
     )
     real_estate_to_dw = SparkSubmitOperator(
         task_id='real_estate_to_dw',
         conn_id='spark_local',
-        application='dags/extract_real_estate_to_dw.py',
+        application='dags/real_estate_to_dw.py',
         driver_class_path=mysql_jar,
         jars=mysql_jar,
         total_executor_cores=2,
-        name='My_Spark',
-        dag=dag
+        name='My_Spark'
     )
+    truncate_real_estate_cdc_table = MySqlOperator(
+        task_id='truncate_real_estate_cdc_table',
+        sql=truncate_real_estate_cdc,
+        mysql_conn_id='mysql_db_local',
+        database='real_estate_db'
+    )
+    truncate_air_quality_cdc_table = MySqlOperator(
+        task_id='truncate_air_quality_cdc_table',
+        sql=truncate_air_quality_cdc,
+        mysql_conn_id='mysql_db_local',
+        database='real_estate_db'
+    )
+    truncate_exchange_rate_cdc_table = MySqlOperator(
+        task_id='truncate_exchange_rate_cdc_table',
+        sql=truncate_exchange_rate_cdc,
+        mysql_conn_id='mysql_db_local',
+        database='real_estate_db',
+    )
+
+    exchange_rate_to_dw >> truncate_exchange_rate_cdc_table
+    air_quality_to_dw >> truncate_air_quality_cdc_table
+    real_estate_to_dw >> truncate_real_estate_cdc_table

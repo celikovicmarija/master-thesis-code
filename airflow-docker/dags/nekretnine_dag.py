@@ -13,7 +13,6 @@ from utilities.sql_scripts import create_real_estate_table
 
 keys = get_keys_and_constants()
 
-
 upload_bucket_name = keys.upload_bucket_name
 mysql_jar = keys.mysql_connector_jar
 scraper = '/opt/airflow/dags/real_estate_scraper'
@@ -61,11 +60,11 @@ with DAG(
         database='real_estate_db'
     )
 
-    # scrape_nekretnine = BashOperator(
-    #     task_id='scrape_nekretnine',
-    #     bash_command=f"cd {scraper} && scrapy crawl nekretnine -o {data_location}/new/{nekretnine_file}"
-    #                  f".csv -s CSV_SEP=';'",
-    #     dag=dag)
+    scrape_nekretnine = BashOperator(
+        task_id='scrape_nekretnine',
+        bash_command=f"cd {scraper} && scrapy crawl nekretnine -o {data_location}/new/{nekretnine_file}"
+                     f".csv -s CSV_SEP=';'",
+        dag=dag)
 
     pyspark_nekretnine = SparkSubmitOperator(
         task_id='pyspark_nekretnine',
@@ -150,7 +149,7 @@ with DAG(
         dag=dag
     )
 
-    # scrape_nekretnine >> pyspark_oglasi
+    scrape_nekretnine >> pyspark_nekretnine
     pyspark_nekretnine >> find_foreign_keys_nekretnine
     create_real_estate_table >> save_nekretnine_to_database
     pyspark_nekretnine >> upload_to_S3_nekretnine_raw
@@ -160,4 +159,3 @@ with DAG(
     upload_to_S3_nekretnine_clean >> delete_local_nekretnine_clean
     save_nekretnine_to_database >> upload_to_S3_nekretnine_ready_for_db
     upload_to_S3_nekretnine_ready_for_db >> delete_local_nekretnine_ready_for_db
-

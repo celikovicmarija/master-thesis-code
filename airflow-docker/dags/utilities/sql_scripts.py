@@ -67,3 +67,13 @@ CREATE TABLE IF NOT EXISTS `real_estate_post` (
   CONSTRAINT `real_estate_posts_FK_3` FOREIGN KEY (`heating_type_id`) REFERENCES `heating_type` (`heating_type_id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 '''
+truncate_air_quality_cdc = '''
+TRUNCATE TABLE air_quality_cdc
+'''
+truncate_exchange_rate_cdc = '''
+TRUNCATE TABLE exchange_rate_cdc
+'''
+
+truncate_real_estate_cdc = '''
+TRUNCATE TABLE real_estate_post_cdc
+'''

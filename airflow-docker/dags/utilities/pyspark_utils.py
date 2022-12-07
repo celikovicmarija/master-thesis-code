@@ -14,6 +14,7 @@ from .config import get_keys_and_constants, get_db_settings
 
 keys = get_keys_and_constants()
 db_settings = get_db_settings()
+
 mysql_connector_jar = keys.mysql_connector_jar
 dw_real_estate_url = keys.dw_real_estate_url
 real_estate_db_url = keys.real_estate_db_url
@@ -111,8 +112,8 @@ def read_from_dw(spark: SparkSession, table: str) -> DataFrame:
         driver=mysql_driver,
         dbtable=table,
         user=user,
-        password=pwd).option('fetchsize', '100000').load()
-    df.repartition(20)
+        password=pwd).option('fetchsize', '5000').load()
+    df.repartition(250)
     return df
 
 
@@ -131,7 +132,7 @@ def load_posts_data(spark: SparkSession, data_file: str) -> DataFrame:
         .option("delimiter", ",") \
         .option("driver", mysql_driver) \
         .csv(data_file, multiLine=True, columnNameOfCorruptRecord='broken',
-             encoding='utf-8')  # .option("inferSchema", "true")         # .option("mode", "FAILFAST") \
+             encoding='utf-8')
     df.repartition(20)
     return df
 
@@ -190,7 +191,7 @@ def extract_columns_for_geoapify(df: DataFrame) -> DataFrame:
 def save_file_to_csv(df: DataFrame, file_name: str) -> None:
   #  df.repartition(1).write.option("header", "true").option("sep", ";").mode("overwrite").option('batchsize',
    #                                                                                              '100').csv(file_name)
-    df.repartition(1).toPandas().to_csv(file_name, header=True, sep=';', index_col=False)
+    df.repartition(1).toPandas().to_csv(file_name, header=True, sep=';', index=False)
 
 
 def get_spark_app_config() -> SparkConf:
@@ -273,30 +274,4 @@ place_details_schema = StructType([
     StructField('address_line1', StringType(), nullable=True),
     StructField('address_line2', StringType(), nullable=True),
     StructField('categories', StringType(), nullable=True),
-])
-
-Schema = StructType([
-    StructField('additional', StringType(), nullable=True),
-    StructField('advertiser', StringType(), nullable=True),
-    StructField('city', StringType(), nullable=True),
-    StructField('city_lines', StringType(), nullable=True),
-    StructField('date', StringType(), nullable=True),
-    StructField('description', StringType(), nullable=True),
-    StructField('floor_number', StringType(), nullable=True),
-    StructField('heating_type', StringType(), nullable=True),
-    StructField('link', StringType(), nullable=True),
-    StructField('location', StringType(), nullable=True),
-    StructField('micro_location', StringType(), nullable=True),
-    StructField('monthly_bills', StringType(), nullable=True),
-    StructField('number_of_rooms', StringType(), nullable=True),  # IntegerType
-    StructField('object_state', StringType(), nullable=True),
-    StructField('object_type', StringType(), nullable=True),
-    StructField('price', FloatType(), nullable=True),
-    StructField('price_per_unit', FloatType(), nullable=True),
-    StructField('real_estate_type', StringType(), nullable=True),
-    StructField('size_in_squared_meters', StringType(), nullable=True),  # FloatType
-    StructField('street', StringType(), nullable=True),
-    StructField('title', StringType(), nullable=True),
-    StructField('total_number_of_floors', StringType(), nullable=True),
-    StructField('w_type', StringType(), nullable=True),
 ])

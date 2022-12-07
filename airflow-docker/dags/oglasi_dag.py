@@ -2,7 +2,6 @@ import os
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
-# from airflow.operators.bash import BashOperator
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -14,7 +13,6 @@ from utilities.sql_scripts import create_real_estate_table
 
 keys = get_keys_and_constants()
 
-###############
 upload_bucket_name = keys.upload_bucket_name
 mysql_jar = keys.mysql_connector_jar
 scraper = '/opt/airflow/dags/real_estate_scraper'

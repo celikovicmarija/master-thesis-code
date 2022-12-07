@@ -14,8 +14,6 @@ default_args = {
     'retries': 2,
     'retry_delay': timedelta(minutes=2),
 }
-# TODO: replace local with RDS connection
-
 with DAG(
         dag_id='daily_data_dag',
         schedule_interval='@daily',
@@ -37,13 +35,11 @@ with DAG(
     )
     find_air_quality_daily = PythonOperator(
         task_id='find_air_quality_data',
-        python_callable=fill_daily_stations_data,
-        dag=dag)
+        python_callable=fill_daily_stations_data)
 
     find_daily_exchange_rate = PythonOperator(
         task_id='find_daily_exchange_rate',
-        python_callable=find_eur_to_rsd_and_usd_exchange_rate_for_today,
-        dag=dag)
+        python_callable=find_eur_to_rsd_and_usd_exchange_rate_for_today)
 
 create_air_quality_table >> find_air_quality_daily
 create_exchange_rate_table >> find_daily_exchange_rate
